@@ -1,4 +1,4 @@
-name: Java CI/CD Pipeli
+name: Java CI/CD Pipeline
 
 on:
   push:
@@ -35,11 +35,20 @@ jobs:
         unzip awscliv2.zip
         sudo ./aws/install --update
 
-    - name: Upload to S3
+    - name: Configure AWS Credentials
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: 'us-east-1'
+      run: |
+        mkdir -p ~/.aws
+        echo "[default]" > ~/.aws/credentials
+        echo "aws_access_key_id = $AWS_ACCESS_KEY_ID" >> ~/.aws/credentials
+        echo "aws_secret_access_key = $AWS_SECRET_ACCESS_KEY" >> ~/.aws/credentials
+        echo "[default]" > ~/.aws/config
+        echo "region = us-east-1" >> ~/.aws/config
+
+    - name: Upload to S3
+      env:
         S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
       run: |
         aws s3 cp target/my-java-project-1.0-SNAPSHOT.jar s3://$S3_BUCKET_NAME/
