@@ -27,13 +27,19 @@ jobs:
 
     - name: Build with Maven
       run: mvn clean package
-      working-directory: ./ # Adjust this if the pom.xml is in a subdirectory
+      working-directory: ./java-project # Change this if your pom.xml is elsewhere
 
-    - name: Install AWS CLI
+    - name: Install or Update AWS CLI
       run: |
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-        unzip awscliv2.zip
-        sudo ./aws/install
+        if ! command -v aws &> /dev/null; then
+          echo "AWS CLI not found. Installing..."
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+        else
+          echo "AWS CLI already installed. Updating..."
+          sudo ./aws/install --update
+        fi
 
     - name: Upload to S3
       env:
@@ -42,5 +48,4 @@ jobs:
         AWS_DEFAULT_REGION: 'us-east-1'
         S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
       run: |
-        aws s3 cp target/my-java-project-1.0-SNAPSHOT.jar s3://$S3_BUCKET_NAME/
-      working-directory: ./ # Adjust this if the target directory is in a subdirectory
+        aws s3 cp java-project/target/my-java-project-1.0-SNAPSHOT.jar s3://$S3_BUCKET_NAME/
